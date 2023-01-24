@@ -349,12 +349,14 @@ $.ajax({
   dataType: 'json',
   data: {},
 })
-  .done((resumes) => {
-    console.log('Ajax Response', resumes);
+  .done((resumesList) => {
+    console.log('Ajax Response', resumesList);
 
-    const positions = _.compact(_.uniq(_.map(resumes.data, 'Position')));
-    const skills = _.uniq(_.map(resumes.data, 'Skills'));
-    const frameworks = _.uniq(_.map(resumes.data, 'Framework'));
+    const resumes = _.reject(resumesList.data, _.isEmpty);
+
+    const positions = _.compact(_.uniq(_.map(resumes, 'Position')));
+    const skills = _.uniq(_.map(resumes, 'Skills'));
+    const frameworks = _.uniq(_.map(resumes, 'Framework'));
     const rank = rankingList;
     const skillList = _.compact(_.union(skills.flat(), frameworks.flat()));
 
@@ -385,7 +387,7 @@ $.ajax({
     );
     $('#skill-filter').append(skillTags);
 
-    renderResumes(resumes.data);
+    renderResumes(resumes);
 
     $('#position-filter').change((e) => {
       console.log(e.target.value);
@@ -395,14 +397,9 @@ $.ajax({
       const skillValue = $('#skill-filter').val();
 
       if (positionValue === 'all' && rankValue === 'all' && skillValue === 'all')
-        return renderResumes(resumes.data);
+        return renderResumes(resumes);
 
-      const list = resumeFilterCondition(
-        resumes.data,
-        positionValue,
-        rankValue,
-        skillValue,
-      );
+      const list = resumeFilterCondition(resumes, positionValue, rankValue, skillValue);
       renderResumes(list);
     });
 
@@ -414,14 +411,9 @@ $.ajax({
       const skillValue = $('#skill-filter').val();
 
       if (positionValue === 'all' && rankValue === 'all' && skillValue === 'all')
-        return renderResumes(resumes.data);
+        return renderResumes(resumes);
 
-      const list = resumeFilterCondition(
-        resumes.data,
-        positionValue,
-        rankValue,
-        skillValue,
-      );
+      const list = resumeFilterCondition(resumes, positionValue, rankValue, skillValue);
       renderResumes(list);
     });
 
@@ -433,14 +425,9 @@ $.ajax({
       const rankValue = $('#rank-filter').val();
 
       if (positionValue === 'all' && rankValue === 'all' && skillValue === 'all')
-        return renderResumes(resumes.data);
+        return renderResumes(resumes);
 
-      const list = resumeFilterCondition(
-        resumes.data,
-        positionValue,
-        rankValue,
-        skillValue,
-      );
+      const list = resumeFilterCondition(resumes, positionValue, rankValue, skillValue);
       renderResumes(list);
     });
   })
