@@ -704,6 +704,11 @@ select.languageSwitcher option {
   width: 45%;
   min-width: 400px;
 }
+
+.sec_company_list_right {
+  width: 45%;
+  min-width: 400px;
+}
 .sec-company_item {
   display: flex;
   justify-content: space-between;
@@ -716,6 +721,11 @@ select.languageSwitcher option {
   padding-top: 0;
 }
 .sec-company_item_title {
+  font-weight: 500;
+  width: 82px;
+  margin-right: 20px;
+}
+.sec-company_item_title2 {
   font-weight: 500;
   width: 82px;
   margin-right: 20px;
@@ -1172,6 +1182,11 @@ select.languageSwitcher option {
     width: 100%;
     min-width: auto;
   }
+  .sec_company_list_right {
+    width: 100%;
+    min-width: auto;
+    margin-top: 60px;
+  }
   .sec-company_item {
     padding: 8px 0;
     font-size: 16px;
@@ -1181,6 +1196,9 @@ select.languageSwitcher option {
     margin-right: 80px;
   }
   .sec-company_item_text {
+    width: calc(100% - 140px);
+  }
+  .address_details {
     width: calc(100% - 140px);
   }
   .sec-company_logo {
