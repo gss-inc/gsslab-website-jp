@@ -1,3 +1,7 @@
+let items = [];
+const itemsPerPage = 10;
+let currentPage = 1;
+
 function toggleModal() {
   // モーダル用
   const elems = document.querySelectorAll('.card');
@@ -207,31 +211,33 @@ function renderModals(resumes) {
   });
 }
 
-function renderResumes(resumes) {
+function renderResumes(resumesLists) {
   let resumeCount = 0;
 
   $('#render-resumes').html('');
 
-  $('#number-of-list').text(_.size(resumes) + ' 名のエンジニアが見つかりました');
+  $('#number-of-list').text(_.size(resumesLists) + ' 名のエンジニアが見つかりました');
+
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const resumes = resumesLists.slice(startIndex, endIndex);
 
   $(resumes).each((index, resume) => {
-    if (resume?.Card_Display) {
-      resume.salary = _.floor(resume.Salary / 10000, 1);
-      resume.picture = resume.Picture ? resume.Picture[0].url : null;
-      resume.skils = resume.Skills
-        ? _.reduce(
-            resume.Skills,
-            (m, skill, key) => {
-              return (
-                m +
-                `<li class="badge_item ${badgeLightColor[skill.length]}">${skill}</li>`
-              );
-            },
-            '',
-          )
-        : `<li class="badge_item badge_light_9">調整中</li>`;
+    resume.salary = _.floor(resume.Salary / 10000, 1);
+    resume.picture = resume.Picture ? resume.Picture[0].url : null;
+    resume.skils = resume.Skills
+      ? _.reduce(
+          resume.Skills,
+          (m, skill, key) => {
+            return (
+              m + `<li class="badge_item ${badgeLightColor[skill.length]}">${skill}</li>`
+            );
+          },
+          '',
+        )
+      : `<li class="badge_item badge_light_9">調整中</li>`;
 
-      $('#render-resumes').append(`
+    $('#render-resumes').append(`
       <li class="card" data-js-num="${index + 1}">
       <div class="card_header">
           <figure class="card_figure">
@@ -248,8 +254,8 @@ function renderResumes(resumes) {
               ${
                 resume.Nickname ? resume.Nickname : '名前（調整中）'
               }<br><span class="card_name_age">${resume.Age ? `(${resume.Age}歳)` : ''} ${
-        resume?.Gender ?? ''
-      }</span>
+      resume?.Gender ?? ''
+    }</span>
               </h2>
               <div class="card_rank">
                   <img src="${
@@ -298,8 +304,7 @@ function renderResumes(resumes) {
       </li>
       `);
 
-      resumeCount += 1;
-    }
+    resumeCount += 1;
   });
 
   $('#number-of-list').text(resumeCount + ' 名のエンジニアが見つかりました');
@@ -342,6 +347,62 @@ const resumeFilterCondition = (resumes, positionValue, rankValue, skillValue) =>
   return _.filter(resumeList, filterValues);
 };
 
+/**
+ * Render pagination of resume
+ *
+ * @param {Object} items
+ *
+ * @returns void
+ */
+const renderPagination = (items) => {
+  const paginationContainer = document.getElementById('pagination');
+  const totalPages = Math.ceil(items.length / itemsPerPage);
+  const pageLinksContainer = document.getElementById('page-links');
+
+  // clear the page links container
+  pageLinksContainer.innerHTML = '';
+
+  // render the "prev" button
+  const prevBtn = document.getElementById('prev-btn');
+  prevBtn.disabled = currentPage === 1;
+  prevBtn.addEventListener('click', () => {
+    if (currentPage > 1) {
+      currentPage--;
+      renderResumes(items);
+      renderPagination(items);
+    }
+  });
+  paginationContainer.insertBefore(prevBtn, pageLinksContainer);
+
+  // render the numeric page links
+  for (let i = 1; i <= totalPages; i++) {
+    const pageLink = document.createElement('button');
+    pageLink.textContent = i;
+    if (i === currentPage) {
+      pageLink.disabled = true;
+    }
+    pageLink.addEventListener('click', () => {
+      currentPage = i;
+      renderResumes(items);
+      renderPagination(items);
+    });
+    pageLinksContainer.appendChild(pageLink);
+  }
+
+  // render the "next" button
+  const nextBtn = document.getElementById('next-btn');
+  nextBtn.textContent = 'Next';
+  nextBtn.disabled = currentPage === totalPages;
+  nextBtn.addEventListener('click', () => {
+    if (currentPage < totalPages) {
+      currentPage++;
+      renderResumes(items);
+      renderPagination(items);
+    }
+  });
+  paginationContainer.appendChild(nextBtn);
+};
+
 $.ajax({
   url: ' https://gsslab-website-api.vercel.app/api/get_all_resume',
   type: 'POST',
@@ -350,9 +411,11 @@ $.ajax({
   data: {},
 })
   .done((resumesList) => {
-    console.log('Ajax Response', resumesList);
+    const resumes = _.filter(_.reject(resumesList.data, _.isEmpty), {
+      Card_Display: true,
+    });
 
-    const resumes = _.reject(resumesList.data, _.isEmpty);
+    items = resumes;
 
     const positions = _.compact(_.uniq(_.map(resumes, 'Position')));
     const skills = _.uniq(_.map(resumes, 'Skills'));
@@ -387,6 +450,7 @@ $.ajax({
     );
     $('#skill-filter').append(skillTags);
 
+    renderPagination(resumes);
     renderResumes(resumes);
 
     $('#position-filter').change((e) => {
